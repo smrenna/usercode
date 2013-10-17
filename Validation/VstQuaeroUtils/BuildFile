@@ -1,0 +1,11 @@
+<use name=pythia6>
+<use name=clhep>
+<use name=root>
+<lib name=ValidationVstMathUtils>
+<export>
+   <use name=pythia6>
+   <use name=clhep>
+   <use name=root>
+   <lib name=ValidationVstMathUtils>
+   <lib name=ValidationVstQuaeroUtils>
+</export>

@@ -1,0 +1,14 @@
+<architecture name="slc._[^_]*_gcc4[5-9]">
+    <flags LDFLAGS="$(PYTHIA6_BASE)/lib/pydata.o"/>
+</architecture>
+<use name="FWCore/Framework"/>
+<use name="FWCore/PluginManager"/>
+<use name="FWCore/ParameterSet"/>
+<use name="pythia6"/>
+<use name="hepmc"/>
+<use name="fastjet"/>
+<use name="f77compiler"/>
+<use name="GeneratorInterface/Core"/>
+<use name="GeneratorInterface/LHEInterface"/>
+<use name="SimDataFormats/GeneratorProducts"/>
+<flags EDM_PLUGIN="1"/>

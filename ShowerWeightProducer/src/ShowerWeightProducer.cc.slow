@@ -1,0 +1,482 @@
+// -*- C++ -*-
+//
+// Package:    ShowerWeightProducer
+// Class:      ShowerWeightProducer
+// 
+/**\class ShowerWeightProducer ShowerWeightProducer.cc UserCode/ShowerWeightProducer/src/ShowerWeightProducer.cc
+
+ Description: [one line class summary]
+
+ Implementation:
+     [Notes on implementation]
+*/
+//
+// Original Author:  Stephen Mrenna
+//         Created:  Wed Oct 24 17:09:34 CDT 2012
+// $Id: ShowerWeightProducer.cc.slow,v 1.1.1.1 2012/12/18 21:31:06 mrenna Exp $
+//
+//
+
+
+// system include files
+#include <memory>
+#include <sstream>
+#include <string>
+#include <algorithm>
+
+// user include files
+#include "FWCore/Framework/interface/Frameworkfwd.h"
+#include "FWCore/Framework/interface/EDProducer.h"
+
+#include "FWCore/Framework/interface/Event.h"
+#include "FWCore/Framework/interface/MakerMacros.h"
+
+#include "FWCore/ParameterSet/interface/ParameterSet.h"
+
+#include "FWCore/Framework/interface/EventSetup.h"
+#include "FWCore/Framework/interface/ESHandle.h"
+
+#include "FWCore/Framework/interface/Run.h"
+
+#include "GeneratorInterface/Pythia6Interface/interface/Pythia6Declarations.h"
+
+#include "HepMC/GenEvent.h"
+#include "HepMC/PdfInfo.h"
+#include "HepMC/PythiaWrapper6_4.h"
+#include "HepMC/HEPEVT_Wrapper.h"
+
+#include "GeneratorInterface/LHEInterface/interface/LHERunInfo.h"
+#include "SimDataFormats/GeneratorProducts/interface/LHEEventProduct.h"
+#include "SimDataFormats/GeneratorProducts/interface/LHECommonBlocks.h"
+//#include "GeneratorInterface/PartonShowerVeto/interface/JetMatching.h"
+#include "DataFormats/HepMCCandidate/interface/GenParticleFwd.h"
+#include "DataFormats/HepMCCandidate/interface/GenParticle.h"
+
+#include "fastjet/JetDefinition.hh"
+#include "fastjet/ClusterSequence.hh"
+
+//
+// class declaration
+//
+
+class ShowerWeightProducer : public edm::EDProducer {
+   public:
+      explicit ShowerWeightProducer(const edm::ParameterSet&);
+      ~ShowerWeightProducer();
+
+      static void fillDescriptions(edm::ConfigurationDescriptions& descriptions);
+
+   private:
+      virtual void beginJob() ;
+      virtual void produce(edm::Event&, const edm::EventSetup&);
+      virtual void endJob() ;
+      
+      virtual void beginRun(edm::Run&, edm::EventSetup const&);
+      //virtual void endRun(edm::Run&, edm::EventSetup const&);
+      //virtual void beginLuminosityBlock(edm::LuminosityBlock&, edm::EventSetup const&);
+      //virtual void endLuminosityBlock(edm::LuminosityBlock&, edm::EventSetup const&);
+
+      // ----------member data ---------------------------
+      fastjet::JetDefinition fJetDefinition;
+      double qCut;
+      edm::ParameterSetID lastPSetId_;
+
+
+};
+
+//
+// constants, enums and typedefs
+//
+typedef std::vector<std::string>::const_iterator comments_const_iterator;
+typedef std::vector<LHERunInfoProduct::Header>::const_iterator headers_const_iterator;
+
+int minusOne=-1;
+int zero=0;
+int one=1;
+int two=2;
+
+//
+// static data member definitions
+//
+#define pyrand pyrand_ 
+#define pyscat pyscat_
+#define pyevol pyevol_
+#define pyveto pyveto_
+#define pymihk pymihk_
+#define pymirm pymirm_
+#define pylhef pylhef_
+extern "C" {
+   void pyrand();
+   void pyscat();
+   void pyevol(int*,double*,double*);
+   void pyveto(int*);
+   void pymihk(); 
+   void pymirm();
+   void pylhef();
+}
+
+
+//
+// constructors and destructor
+//
+ShowerWeightProducer::ShowerWeightProducer(const edm::ParameterSet& iConfig) : qCut(-1)
+{
+   //register your products
+
+   produces<std::vector<double> >("weight");
+
+   //now do what ever other initialization is needed
+   fJetDefinition = fastjet::JetDefinition(fastjet::kt_algorithm, 1.0 , fastjet::E_scheme);
+  
+}
+
+
+ShowerWeightProducer::~ShowerWeightProducer()
+{
+ 
+   // do anything here that needs to be done at desctruction time
+   // (e.g. close files, deallocate resources etc.)
+
+}
+
+
+//
+// member functions
+//
+
+// ------------ method called to produce the data  ------------
+void
+ShowerWeightProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
+{
+
+   std::auto_ptr<std::vector<double> > weightOut(new std::vector<double>);
+
+   using namespace edm;
+   using namespace reco;
+
+   Handle<GenParticleCollection> genPart_;
+   try {
+      iEvent.getByLabel("genParticles", genPart_);
+   } catch (std::exception& ex) {
+      std::cout << "genParticles not found " << std::endl;
+      return;
+   }
+
+   Handle<LHEEventProduct> lheEvent_;
+   try {
+      iEvent.getByLabel("source", lheEvent_);
+   } catch (std::exception& ex) {
+      std::cout << "lheEvent not found " << std::endl;
+      return;
+   }
+
+
+//Set up the Pythia parameters and initialize
+
+   ParameterSet myPSet;
+   try {
+      iEvent.getProcessParameterSet("HLT",myPSet);
+   } catch (std::exception& ex) {
+      std::cout << "parameterSet not found " << std::endl;
+      return;
+   }
+   
+   if( lastPSetId_  != myPSet.id() ) {
+      lastPSetId_  = myPSet.id();
+      const ParameterSet& generator = myPSet.getParameter<ParameterSet>("generator");
+      const ParameterSet& pythiaParams = generator.getParameter<ParameterSet>("PythiaParameters");
+      std::vector<std::string> procParams = pythiaParams.getParameter<std::vector<std::string> >("processParameters");
+      for(auto const& line:procParams) gen::call_pygive(line.c_str());
+      std::vector<std::string> ueSettings = pythiaParams.getParameter<std::vector<std::string> >("pythiaUESettings");
+      for(auto const& line:ueSettings) gen::call_pygive(line.c_str());
+ //     gen::call_pygive("MSTP(143)=1");
+      gen::call_pygive("MSTP(81)=20");
+      gen::call_pygive("MSTP(71)=0");
+      gen::call_pygive("MSTP(91)=0");
+      gen::call_pygive("MSTP(111)=0");
+      gen::call_pygive("MSTP(163)=55");
+      call_pyinit("USER","","", 0.0);
+      gen::call_pygive("PARP(72)=");
+   }
+
+   GenParticleCollection::const_iterator p_begin = genPart_->begin();
+   GenParticleCollection::const_iterator p_end = genPart_->end();
+
+   std::vector<fastjet::PseudoJet> vecs1, vecs2;
+
+   GenParticleCollection::const_iterator pisrOne = p_begin+2;
+   GenParticleCollection::const_iterator pisrTwo = p_begin+3;
+
+//Make collections of the ISR particles
+
+   int idx=0;
+   for(GenParticleCollection::const_iterator p = p_begin; p != p_end; ++p, ++idx) {
+      if( p->status() == 3 ) continue;
+      if( p->mother(0) == &*pisrOne ) {
+         fastjet::PseudoJet fastTemp = fastjet::PseudoJet(p->px(),p->py(),p->pz(),p->energy());
+         fastTemp.set_user_index( idx );
+         vecs1.push_back(fastTemp);         
+      } else if ( p->mother(0) == &*pisrTwo ) {
+         fastjet::PseudoJet fastTemp = fastjet::PseudoJet(p->px(),p->py(),p->pz(),p->energy());
+         fastTemp.set_user_index( idx );
+         vecs2.push_back(fastTemp);         
+      }
+   }
+   
+   double pTone = -1;
+   double pTtwo = -1;
+
+   if( vecs1.size() > 0 ) { 
+     fastjet::ClusterSequence cseq1(vecs1, fJetDefinition);
+     std::vector<fastjet::PseudoJet> isrJets1 = sorted_by_pt(cseq1.inclusive_jets(qCut));
+     pTone = ( isrJets1.size()>0 ) ? isrJets1[0].perp() : 0.0;
+   }
+
+   if( vecs2.size() > 0 ) {
+     fastjet::ClusterSequence cseq2(vecs2, fJetDefinition);
+     std::vector<fastjet::PseudoJet> isrJets2 = sorted_by_pt(cseq2.inclusive_jets(qCut));
+     pTtwo = ( isrJets2.size()>0 ) ? isrJets2[0].perp() : 0.0;
+   }
+
+   const lhef::HEPEUP hepeupx_ = lheEvent_->hepeup();
+
+   const int nup_ = hepeupx_.NUP; 
+   hepeup_.nup = hepeupx_.NUP; 
+   const std::vector<int> idup_ = hepeupx_.IDUP;
+   const std::vector<int> istup_ = hepeupx_.ISTUP;
+
+   for(size_t i=0; i< idup_.size() ; ++i) {
+      hepeup_.idup[i] = idup_[i];
+      hepeup_.istup[i] = istup_[i];
+      hepeup_.mothup[i][0] = hepeupx_.MOTHUP[i].first;
+      hepeup_.mothup[i][1] = hepeupx_.MOTHUP[i].second;
+      for(size_t j=0; j< 5; ++j) 
+         hepeup_.pup[i][j] = hepeupx_.PUP[i][j];
+      hepeup_.icolup[i][0] = hepeupx_.ICOLUP[i].first;
+      hepeup_.icolup[i][1] = hepeupx_.ICOLUP[i].second;
+   }
+
+   hepeup_.idprup = hepeupx_.IDPRUP;
+   hepeup_.xwgtup = hepeupx_.XWGTUP;
+   hepeup_.scalup = hepeupx_.SCALUP;
+   
+   double pT2max=0;
+   double qScale = hepeupx_.SCALUP;
+// * sqrt( pypars.parp[63] );
+
+   double pTshow = (pTone > pTtwo) ? pTone : pTtwo;
+
+   double localQCut = (qCut > pTshow) ? qCut : pTshow ;
+
+   double pT2min=pow(localQCut,2);
+
+   double pTmin = sqrt(pT2min);
+
+
+  
+
+   for(int iq=-1; iq<2; ++ iq) {
+
+      double fact=pow(2.0,iq);
+      pypars.parp[66] = fact*fact;
+//      std::cout << " parp(67) = " << pypars.parp[66] << std::endl;
+
+      double frac=0.0;
+      int pass=0;
+//      int iknt=10000;
+      int iknt=1000;
+      pT2max = pow(fact*qScale,2);
+
+      if(1) {
+
+         for(int i=0; i<iknt; ++i) {
+//         if( iq==-1) pylhef();
+            call_pyevnt();
+            if( pyint1.vint[356]>pTmin ) {
+               frac+=1.0/iknt;
+               pass+=1;
+            }
+         }
+
+      } else {
+         pyjets.n = 0;
+         pyint1.mint[6] = 0;
+         pyint1.mint[7] = 0;
+         pyint1.mint[29] = 0;
+         pyint1.mint[82] = 0;
+         pyint1.mint[83] = pypars.mstp[125];
+         pydat1.mstu[23]=0;
+         pydat1.mstu[32]=0;
+         pyint1.mint[34] = 3;
+
+         pypars.msti[60]=0;
+         pyint1.mint[81]=1; 
+         pyint1.mint[50]=0;
+         pypars.msti[51]=0;
+
+         pyint1.mint[30]=0;
+         pyint1.mint[38]=0;	
+         pyint1.mint[35]=0;
+         pyint1.mint[56]=0; 
+
+
+//   call_pyevnt();
+
+         pyrand();
+         pyint1.mint[50]=0;
+         pyscat();
+         pyevol(&minusOne,&pT2max,&pT2min);
+//         if( iq==-1) pylhef();
+         for(int i=0; i<iknt; ++i) {
+
+
+//      pyevol(&minusOne,&pT2max,&pT2min);
+
+            pyint1.mint[50]=0;
+            pyevol(&zero,&pT2max,&pT2min);
+            pyevol(&one,&pT2max,&pT2min);
+      //      pyevol(&two,&pT2max,&pT2min);
+
+            if( pyint1.mint[351]>0 && pyint1.vint[356]>pTmin ) {
+               frac+=1.0/iknt;
+               pass+=1;
+            }
+            pyrand();
+            pyint1.mint[50]=0;
+            pyscat(); 
+         }
+      }
+      double sud = 1.0-frac;
+      if( localQCut > qCut ) {
+         double radProb = -log(sud)*sud;
+         weightOut->push_back(radProb);
+      } else {
+         weightOut->push_back(sud);
+      }
+   }
+
+   iEvent.put(weightOut,std::string("weight")); 
+}
+
+// ------------ method called once each job just before starting event loop  ------------
+void 
+ShowerWeightProducer::beginJob()
+{
+}
+
+// ------------ method called once each job just after ending the event loop  ------------
+void 
+ShowerWeightProducer::endJob() {
+}
+
+// ------------ method called when starting to processes a run  ------------
+
+void
+ShowerWeightProducer::beginRun(edm::Run& iRun, edm::EventSetup const&)
+{
+   using namespace edm;
+   Handle<LHERunInfoProduct> run;
+   try {
+      iRun.getByLabel("source",run);
+   } catch (std::exception& ex) {
+      std::cout << "lheRuninfo not found " << std::endl;
+      return;
+   }
+    
+   const lhef::HEPRUP thisHeprup_ = run->heprup();
+
+
+//   std::cout << "HEPRUP \n" << std::endl;
+//   std::cout << "IDBMUP " << std::setw(14) << std::fixed << thisHeprup_.IDBMUP.first 
+//             << std::setw(14) << std::fixed << thisHeprup_.IDBMUP.second << std::endl; 
+   heprup_.idbmup[0] = thisHeprup_.IDBMUP.first;
+   heprup_.idbmup[1] = thisHeprup_.IDBMUP.second;
+//   std::cout << "EBMUP  " << std::setw(14) << std::fixed << thisHeprup_.EBMUP.first 
+//             << std::setw(14) << std::fixed << thisHeprup_.EBMUP.second << std::endl; 
+   heprup_.ebmup[0] = thisHeprup_.EBMUP.first;
+   heprup_.ebmup[1] = thisHeprup_.EBMUP.second;
+//   std::cout << "PDFGUP " << std::setw(14) << std::fixed << thisHeprup_.PDFGUP.first 
+//             << std::setw(14) << std::fixed << thisHeprup_.PDFGUP.second << std::endl; 
+//   std::cout << "PDFSUP " << std::setw(14) << std::fixed << thisHeprup_.PDFSUP.first 
+//             << std::setw(14) << std::fixed << thisHeprup_.PDFSUP.second << std::endl; 
+//   std::cout << "IDWTUP " << std::setw(14) << std::fixed << thisHeprup_.IDWTUP << std::endl; 
+   heprup_.idwtup = thisHeprup_.IDWTUP;
+//   std::cout << "NPRUP  " << std::setw(14) << std::fixed << thisHeprup_.NPRUP << std::endl; 
+   heprup_.nprup = thisHeprup_.NPRUP;
+/*   std::cout << "        XSECUP " << std::setw(14) << std::fixed 
+             << "        XERRUP " << std::setw(14) << std::fixed 
+             << "        XMAXUP " << std::setw(14) << std::fixed 
+             << "        LPRUP  " << std::setw(14) << std::fixed << std::endl;*/
+   for ( unsigned int iSize = 0 ; iSize < thisHeprup_.XSECUP.size() ; iSize++ ) {
+/*      std::cout  << std::setw(14) << std::fixed << thisHeprup_.XSECUP[iSize]
+                 << std::setw(14) << std::fixed << thisHeprup_.XERRUP[iSize]
+                 << std::setw(14) << std::fixed << thisHeprup_.XMAXUP[iSize]
+                 << std::setw(14) << std::fixed << thisHeprup_.LPRUP[iSize] 
+                 << std::endl;*/
+      heprup_.xsecup[iSize] = thisHeprup_.XSECUP[iSize];
+      heprup_.xerrup[iSize] = thisHeprup_.XERRUP[iSize];
+      heprup_.xmaxup[iSize] = thisHeprup_.XMAXUP[iSize];
+      heprup_.lprup[iSize] = thisHeprup_.LPRUP[iSize];
+   }
+//   std::cout << " " << std::endl;
+
+
+   headers_const_iterator h_begin = run->headers_begin();
+   headers_const_iterator h_end = run->headers_end();
+
+//  std::vector<std::string> header = run->findHeader("MGRunCard");
+
+
+
+   for( headers_const_iterator hit = h_begin; hit != h_end; ++hit) {
+      size_t found = ((*hit).tag()).find("MGParamCMS");
+      if( found != std::string::npos ) {
+         for( LHERunInfoProduct::Header::const_iterator lit = (*hit).begin(); lit != (*hit).end(); ++lit) {
+            size_t found_cut = (*lit).find(" = qcut");
+            if( found_cut != std::string::npos ) {
+               std::istringstream ss(  (*lit).substr(0,found_cut) );
+               ss >> qCut;
+               break;
+            }
+         }
+      }
+   }
+}
+
+ 
+// ------------ method called when ending the processing of a run  ------------
+/*
+void
+ShowerWeightProducer::endRun(edm::Run&, edm::EventSetup const&)
+{
+}
+*/
+ 
+// ------------ method called when starting to processes a luminosity block  ------------
+/*
+void
+ShowerWeightProducer::beginLuminosityBlock(edm::LuminosityBlock&, edm::EventSetup const&)
+{
+}
+*/
+ 
+// ------------ method called when ending the processing of a luminosity block  ------------
+/*
+void
+ShowerWeightProducer::endLuminosityBlock(edm::LuminosityBlock&, edm::EventSetup const&)
+{
+}
+*/
+ 
+// ------------ method fills 'descriptions' with the allowed parameters for the module  ------------
+void
+ShowerWeightProducer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
+  //The following says we do not know what parameters are allowed so do no validation
+  // Please change this to state exactly what you do use, even if it is no parameters
+  edm::ParameterSetDescription desc;
+  desc.setUnknown();
+  descriptions.addDefault(desc);
+}
+
+//define this as a plug-in
+DEFINE_FWK_MODULE(ShowerWeightProducer);

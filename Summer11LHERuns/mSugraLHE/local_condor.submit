@@ -1,0 +1,13 @@
+universe=vanilla
+Executable=local_condor.sh
+output = $(Process).out
+error =  $(Process).err
+log =    $(Process).log
+Requirements = Memory >= 199 && OpSys == "LINUX" && (Arch != "DUMMY")
+Should_Transfer_Files = YES
+Transfer_Input_Files = oset_cfg.py,fixname.py,reformatter.py
+Arguments = $(Process)
+WhenTOTransferOutput  = ON_EXIT
+environment = SCANDIR=mSugraScan/m0_m12_10_0_1; OFFSET=0; NOEVENTS=10000;
+Notification = error
+Queue 1

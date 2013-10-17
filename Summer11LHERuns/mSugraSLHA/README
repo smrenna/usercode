@@ -1,0 +1,35 @@
+This directory contains an overview of how to generate
+the SLHA files needed for an mSugra scan.
+
+The construction of the SLHA files requires two programs:
+SoftSusy and SUSYHITS.
+
+It does not make sense to rewrite these programs in CMSSW,
+so build them as they are:
+
+tar xzf softsusy-3.1.6.tgz
+cd softsusy-3.1.6
+./configure
+make
+cd ..
+(one output is an executable named "softpoint.x")
+
+cd src
+make
+cd ..
+(output is an executable named "run")
+
+From the "test" directory, you can do a scan (or a 
+single point with a suitable choice of parameters).
+Modify make_sugra_slha.py accordingly.
+
+cd test
+cp ../softsusy-3.1.6/softpoint.x .
+cp ../src/run .
+python make_msugra_slha.py
+
+Output will be files with names like:
+msugra_200_200_10_0_1.slha
+
+Modify the obvious places in lesHouchesInput
+to change tanb, A0, or sign(mu).

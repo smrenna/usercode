@@ -1,0 +1,8 @@
+<flags CXXFLAGS="-Wno-sign-compare"/>
+<use   name="pythia6"/>
+<use   name="clhep"/>
+<use   name="root"/>
+<use   name="Validation/VstMathUtils"/>
+<export>
+  <lib   name="1"/>
+</export>

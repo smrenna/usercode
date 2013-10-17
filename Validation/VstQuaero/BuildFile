@@ -1,0 +1,10 @@
+<use name=clhep>
+<lib name=gsl>
+<lib name=gslcblas>
+<lib name=ValidationVstOptimalBinning>
+<lib name=ValidationVstFewKDE>
+<lib name=ValidationVstMathUtils>
+<lib name=ValidationVstQuaeroUtils>
+<export>
+   <lib name=ValidationVstQuaero>
+</export>

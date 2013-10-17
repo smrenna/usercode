@@ -1,0 +1,10 @@
+<use name=clhep>
+<use name=hepmc>
+<use name=ktjet>
+<lib name=ValidationVstMathUtils>
+<lib name=ValidationVstQuaeroUtils>
+<export>
+ <lib name=ValidationVstMathUtils>
+ <lib name=ValidationVstQuaeroUtils>
+ <lib name=ValidationVstTurboSim>
+</export>

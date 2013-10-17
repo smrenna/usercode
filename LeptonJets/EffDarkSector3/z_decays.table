@@ -1,0 +1,22 @@
+d d~ 0.152805
+u u~ 0.117897
+s s~ 0.151387
+c c~ 0.118085
+b b~ 0.15049
+e- e+ 0.0344125
+mu- mu+ 0.0345432
+ta- ta+ 0.0342515
+ve ve~ 0.0685733
+vm vm~ 0.0688679
+vt vt~ 0.0686861
+w- u d~ 0
+w- c s~ 0
+w- ve e+ 0
+w- vm mu+ 0
+w- vt ta+ 0
+w+ d u~ 0
+w+ s c~ 0
+w+ e- ve~ 0
+w+ mu- vm~ 0
+w+ ta- vt~ 0
+# Total width: 2.44968

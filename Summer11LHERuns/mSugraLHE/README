@@ -1,0 +1,114 @@
+This directory contains information about how to use
+SLHA files to generate LHE files for an mSugra scan.
+
+**NEW** Info on how to make BIASED LHE files
+In the directory "code", there are two files:
+   pyupev.f
+   upveto.f
+
+Put these into Pythia6Interface/src and use "scram".
+
+upveto can be modified to place any veto you would like.
+The current implementation only accepts LHE events that
+  contain two leptons (e,mu,tau) at the production and
+  hard decay level.
+
+Information regarding the cross section and filter acceptance
+  are added currently using the shell script local_condor.sh
+
+**END NEW**
+
+The SLHA files were produced in a previous step.
+For Summer 11, these were placed in:
+UserCode/SusyAnalysis/SLHAFILES/mSugraScan/m0_m12_tanb_A0_signMu.
+
+For example, m0_m12_10_0_1 contains a scan in (m0,m1/2) for
+  tanb=10, A0=0, and mu>0  (all dimensionful units in GeV).
+
+
+For Summer 11, we used Pythia6 to generate the LHE files.
+Alternatively, one can imagine using Pythia8 or MadGraph.
+
+Activating the Pythia6 capability to generate an LHE file requires a 
+small modification to the Pythia6Interface.   You will need to
+check out the interface, replace the code in plugins with the
+versions here, and remake with scram.  The steps are something like
+this:
+
+cd $CMSSW_BASE/src
+addpkg GeneratorInterface/Pythia6Interface
+cd GeneratorInterface/Pythia6Interface
+cp $(new plugin source)/* plugins/
+scramv1 b
+
+Since the generation of the LHE files is fast, the job can be
+done using local condor.   (someone else can add instructions on
+how to do this with CRAB)
+
+The following setup works as follows:
+
+voms-proxy-init
+condor_submit local_condor.submit
+
+In local_condor.submit, you can modify:
+
+SCANDIR == the location of the SLHA files, with a basename
+  of (working CMSSW directory)/src/UserCode/SusyAnalysis/SLHAFILES
+NOEVENTS == desired number of events per scan point, 10k by default
+OFFSET == ability to choose a specific SLHA file for one job
+
+Currently, the SLHA file is fixed by the condor job number.
+Thus, if you generate 1 job ("Queue 1" in local_condor.submit),
+the SLHA files is the "0" element of a listing of the
+SCANDIR directory.    If OFFSET=100, it will select
+the "100" element of the same listing.
+
+In local_condor.sh, you can change the location of the SLHA
+files (basedir).
+
+Also, in this setup, the condor job number is used along with
+bash to select the random number seed for generator part.
+I chose this for the sake of reproducibility.
+
+The output of the current run will be a number of LHE files
+with the naming convention "msugra_m0_m12_tanb_A0_signMu.lhe",
+mimicking the syntax of the SLHA files.
+
+The LHE file is post processed (in the condor run) to add a
+comment for each event specifying the model name.  This is
+accomplished with the "reformatter.py".
+
+This basic setup can be modified to also generate LHE files
+for Simplified Models.
+
+Two other configuration files are included for testing:
+
+  1. testReader_cfg.py tests that the LHE file can be processed into
+     an LHEProduce EDM file.
+
+  2. fastsimTest_cfg.py tests the full DataOps processing chain.
+
+  For either case, you will have to modify the names of the input files.
+
+At the end of the condor run, a (large) number of (smallish) LHE files will
+have been produced.   Before passing the runs off to DataOps, these files
+have to be uploaded into MCDB, a Monte Carlo database.   We have been
+doing this in several steps.  One important point to note is that the bluearc
+system does not seem to like many, many small files.  Your processing will
+run faster if done on a "fixed" disk.
+
+In the first step, we tar the LHE files together, and place them on
+a mass storage system (on cmslpc, we use "/pnfs/cms/WAX/resilient/...").
+Depending upon the size, you may want to produce several tar files.
+
+In the second step, the tar files are untarred, and the LHE files from
+many models are combined.   We aim for a size around 1GB, but that is
+variable.  In the process of combining the events, a standard header
+is added -- we are told this is necessary to upload several files into
+the same MCDB "article".
+
+In the final step, the larger LHE files are uploaded into MCDB.
+
+Some helper scripts to accomplish this are placed in the directory "mcdb".
+These have been modified for the SMS uploads, and need to be reformatted
+back to work for mSugra.  This is coming.

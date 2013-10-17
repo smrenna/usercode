@@ -1,0 +1,16 @@
+This directory contains text files with a listing of SLHA files that
+produce good or bad models.  The bad models have a charged particle
+that is interpreted as stable by Pythia.  In one case, this is because
+the stop has a negative width (likely a SUSYHITS bug). In all others,
+it is because SoftSusy produced a lightest Susy particle that is charged
+(unclear why this was not flagger earlier).
+
+The files badModelNames_tanb_A0_signMu.txt show  (modelFile, KF code of bad particle)
+The files goodModelNames_tanb_A0_signMu.txt show (modelFile, LO cross section)
+
+As usual, the LO cross from Pythia is in (mb), so that 1E-09 mb = 1 pb.
+
+  -rw-r--r-- 1 mrenna us_cms   4559 Jul  6 10:46 badModelNames_10_0_1.txt
+  -rw-r--r-- 1 mrenna us_cms   7001 Jul  6 10:47 badModelNames_40_m500_1.txt
+  -rw-r--r-- 1 mrenna us_cms 138390 Jul  6 10:46 goodModelNames_10_0_1.txt
+  -rw-r--r-- 1 mrenna us_cms 131756 Jul  6 10:47 goodModelNames_40_m500_1.txt

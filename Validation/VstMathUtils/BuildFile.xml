@@ -1,0 +1,5 @@
+<Flags CXXFLAGS="-Wno-sign-compare"/>
+<Flags CXXFLAGS="-Wno-type-limits"/>
+<export>
+  <lib   name="ValidationVstMathUtils"/>
+</export>

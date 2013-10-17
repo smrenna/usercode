@@ -1,0 +1,28 @@
+<flags EDM_PLUGIN=1>
+<use name=SimGeneral/HepPDTRecord>
+<use name=FWCore/Framework>
+<use name=FWCore/ParameterSet>
+<use name=FWCore/Sources
+<use name=FWCore/PluginManager>
+<use name=FWCore/Framework>
+<use name=FWCore/ParameterSet>
+#<use name=FWCore/ServiceRegistry>
+<use name=Validation/VstTurboSim>
+<use name=clhep>
+<use name=hepmc>
+<use name=heppdt>
+<use name=DataFormats/HepMCCandidate>
+<use name=DataFormats/Common>
+<use name=DataFormats/Candidate>
+<use name=DataFormats/JetReco>
+<use name=SimDataFormats/HepMCProduct>
+<use name=PhysicsTools/UtilAlgos>
+<export>
+   <lib name=ValidationVstNtuple2txt>
+   <use name=FWCore/Framework>
+   <use name=FWCore/ParameterSet>
+   <use name=DataFormats/Candidate>
+   <use name=DataFormats/HepMCCandidate>
+   <use name=SimDataFormats/HepMCProduct>
+   <use name=FWCore/PluginManager>
+</export>

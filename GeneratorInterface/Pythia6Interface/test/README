@@ -1,0 +1,7 @@
+STEPS.
+
+1. get starting LHE file.  Here, it is called "temp.lhe"
+2. "cmsRun oset_cfg0.py".  This produces "fort.69".
+3. fix header of output "fort.69".   "fort.69.bak" is an example.
+4. "cmsRun Hadronizer_Mgm...py"
+

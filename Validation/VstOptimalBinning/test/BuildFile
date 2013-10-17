@@ -1,0 +1,3 @@
+<bin name="OptimalBinning_t" file="OptimalBinning_t.cpp">
+ <use name=Validation/VstOptimalBinning>
+</bin>
