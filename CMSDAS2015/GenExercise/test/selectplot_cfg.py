@@ -1,21 +1,38 @@
 import FWCore.ParameterSet.Config as cms
+import FWCore.ParameterSet.VarParsing as VarParsing
 
 process = cms.Process("Demo")
 
+# setup 'analysis'  options
+options = VarParsing.VarParsing ('analysis')
+
+# setup any defaults you want
+options.outputFile = 'selectplot.root'
+options.inputFiles = 'file:pythia8ex7.root'
+options.maxEvents = -1 # -1 means all events
+
+# get and parse the command line arguments
+options.parseArguments()
+
 process.load("FWCore.MessageService.MessageLogger_cfi")
-process.load("PhysicsTools.HepMCCandAlgos.genParticles_cfi")
+#process.load("PhysicsTools.HepMCCandAlgos.genParticles_cfi")
 process.load("SimGeneral.HepPDTESSource.pythiapdt_cfi")
 
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(options.maxEvents) )
 
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
+process.source = cms.Source("PoolSource")
+process.source.fileNames = cms.untracked.vstring(options.inputFiles)
 
-process.source = cms.Source("PoolSource",
-    # replace 'myfile.root' with the source file you want to use
-    fileNames = cms.untracked.vstring(
-#        '/store/user/cmsdas/OSETExercise/t_b_H.root'
-        'file:t_b_H_0.root'
-    )
+process.TFileService = cms.Service("TFileService",
+                                   fileName = cms.string(options.outputFile)
 )
+
+product="genParticles"
+for l in options.inputFiles:
+   if l.find("MINIAOD")>-1:
+      product="prunedGenParticles"
+      break
+
 
 process.printGenParticle = cms.EDAnalyzer("ParticleListDrawer",
      src = cms.InputTag("genParticles"),
@@ -25,42 +42,25 @@ process.printGenParticle = cms.EDAnalyzer("ParticleListDrawer",
 
 
 process.genParticlesClone = cms.EDFilter("CandViewShallowCloneProducer",
-										 src = cms.InputTag("genParticles"),
-										 cut = cms.string("!charge = 0 & status=1")
-										 )
-
-process.genTopClone = cms.EDFilter("CandViewShallowCloneProducer",
-										 src = cms.InputTag("genParticles"),
-										 cut = cms.string("pdgId = 6 & status=3")
+										 src = cms.InputTag(product),
+										 cut = cms.string("status=2 & ((abs(pdgId)>500 & abs(pdgId)<600) || (abs(pdgId)>5000 & abs(pdgId)<6000) ) ")
 										 )
 
 
-process.printGenParticle = cms.EDAnalyzer("ParticleListDrawer",
-     src = cms.InputTag("genParticlesClone"),
-     maxEventsToPrint = cms.untracked.int32(1)
-)
-
-
-
-process.chargedHistos= cms.EDAnalyzer("CandViewHistoAnalyzer",
+process.plotBHadrons= cms.EDAnalyzer("CandViewHistoAnalyzer",
 							src = cms.InputTag("genParticlesClone"),
  histograms = cms.VPSet(
 	    cms.PSet(
 	    min = cms.untracked.double(0.0),
-	    max = cms.untracked.double(20.0),
+	    max = cms.untracked.double(200.0),
 	    nbins = cms.untracked.int32(50),
-	    name = cms.untracked.string("charged track pT"),
+	    name = cms.untracked.string("bHadron pT"),
 	    description = cms.untracked.string("pT [GeV/c"),
 	    plotquantity = cms.untracked.string("pt")
 	    )
 		)
 )
 
-process.TFileService = cms.Service(
-     "TFileService",
-     fileName = cms.string("selectplot.root")
-)
 
-
-process.p = cms.Path(process.genParticles*process.genParticlesClone*process.printGenParticle*process.chargedHistos)
+process.p = cms.Path(process.genParticlesClone*process.plotBHadrons)
 
