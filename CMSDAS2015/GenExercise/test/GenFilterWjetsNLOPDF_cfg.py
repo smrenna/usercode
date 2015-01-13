@@ -61,7 +61,7 @@ process.load("CMSDAS2015.GenExercise.WjetsPy8NLOPDF_cff")
 #     )
 # )
 process.wfilter = cms.EDFilter("MCSingleParticleFilter",
-         Status = cms.untracked.vint32(3),
+         Status = cms.untracked.vint32(62,62),
      MaxEta = cms.untracked.vdouble(200.0),
      MinEta = cms.untracked.vdouble(-200.0),
      MinPt = cms.untracked.vdouble(0.0),
