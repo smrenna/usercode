@@ -41,7 +41,7 @@ process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(options.maxE
 process.source = cms.Source("LHESource")
 process.source.fileNames = cms.untracked.vstring(options.inputFiles)
 
-#process.load("CMSDAS2012.GenExercise.WjetsPy6_cff")
+#process.load("CMSDAS2015.GenExercise.WjetsPy6_cff")
 from Configuration.Generator.PythiaUESettings_cfi import *
 
 process.generator = cms.EDFilter("Pythia6HadronizerFilter",
@@ -106,7 +106,7 @@ process.lfilter = cms.EDFilter("MCSingleParticleFilter",
 
 process.load("RecoJets.Configuration.GenJetParticles_cff")
 process.load("RecoJets.JetProducers.ak5GenJets_cfi")
-process.load("CMSDAS2012.GenExercise.WjetsAnalysis_cfi")
+process.load("CMSDAS2015.GenExercise.WjetsAnalysis_cfi")
 
 
 

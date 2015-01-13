@@ -67,7 +67,7 @@ process.source.fileNames = cms.untracked.vstring(options.inputFiles)
 
 process.load("RecoJets.Configuration.GenJetParticles_cff")
 process.load("RecoJets.JetProducers.ak5GenJets_cfi")
-process.load("CMSDAS2012.GenExercise.WjetsAnalysis_cfi")
+process.load("CMSDAS2015.GenExercise.WjetsAnalysis_cfi")
 
 
 
