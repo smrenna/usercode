@@ -88,7 +88,7 @@ print options.product
 
 #process.load("RecoJets.Configuration.GenJetParticles_cff")
 #process.load("RecoJets.JetProducers.ak5GenJets_cfi")
-process.load("CMSDAS2015.GenExercise.ZjetsAnalysis_cfi")
+process.load("CMSDAS2016.GenExercise.ZjetsAnalysis_cfi")
 process.genWBoson.src = cms.InputTag(options.product)
 process.genLeptons.src = cms.InputTag(options.product)
 
