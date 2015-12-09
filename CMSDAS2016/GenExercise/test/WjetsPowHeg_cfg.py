@@ -65,7 +65,7 @@ process.wfilter = cms.EDFilter("MCSingleParticleFilter",
 
 process.load("RecoJets.Configuration.GenJetParticles_cff")
 process.load("RecoJets.JetProducers.ak5GenJets_cfi")
-process.load("CMSDAS2015.GenExercise.WjetsAnalysis_cfi")
+process.load("CMSDAS2016.GenExercise.WjetsAnalysis_cfi")
 
 
 
