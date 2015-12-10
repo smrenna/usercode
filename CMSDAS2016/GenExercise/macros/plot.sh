@@ -6,9 +6,9 @@ hist2=$2
 echo $hist1
 echo $hist2
 
-rm root.sh
+rm -fv root.sh
 touch root.sh
-rm *.ps
+rm -fv *.ps
 
 echo "
 .L MECompare.C+ 
