@@ -19,6 +19,7 @@ process.load("FWCore.MessageService.MessageLogger_cfi")
 process.load("SimGeneral.HepPDTESSource.pythiapdt_cfi")
 
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(options.maxEvents) )
+process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
 process.source = cms.Source("PoolSource")
 process.source.fileNames = cms.untracked.vstring(options.inputFiles)
@@ -55,7 +56,7 @@ process.plotBHadrons= cms.EDAnalyzer("CandViewHistoAnalyzer",
             max = cms.untracked.double(200.0),
             nbins = cms.untracked.int32(50),
             name = cms.untracked.string("bHadron pT"),
-            description = cms.untracked.string("pT [GeV/c]"),
+            description = cms.untracked.string("p_{T} [GeV/c]"),
             plotquantity = cms.untracked.string("pt")
         )
     )
