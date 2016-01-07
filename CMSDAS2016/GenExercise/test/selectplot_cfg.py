@@ -42,23 +42,23 @@ process.printGenParticle = cms.EDAnalyzer("ParticleListDrawer",
 
 
 process.genParticlesClone = cms.EDFilter("CandViewShallowCloneProducer",
-										 src = cms.InputTag(product),
-										 cut = cms.string("status=2 & ((abs(pdgId)>500 & abs(pdgId)<600) || (abs(pdgId)>5000 & abs(pdgId)<6000) ) ")
-										 )
+    src = cms.InputTag(product),
+    cut = cms.string("status=2 & ((abs(pdgId)>500 & abs(pdgId)<600) || (abs(pdgId)>5000 & abs(pdgId)<6000) ) ")
+)
 
 
 process.plotBHadrons= cms.EDAnalyzer("CandViewHistoAnalyzer",
-							src = cms.InputTag("genParticlesClone"),
- histograms = cms.VPSet(
-	    cms.PSet(
-	    min = cms.untracked.double(0.0),
-	    max = cms.untracked.double(200.0),
-	    nbins = cms.untracked.int32(50),
-	    name = cms.untracked.string("bHadron pT"),
-	    description = cms.untracked.string("pT [GeV/c"),
-	    plotquantity = cms.untracked.string("pt")
-	    )
-		)
+    src = cms.InputTag("genParticlesClone"),
+    histograms = cms.VPSet(
+        cms.PSet(
+            min = cms.untracked.double(0.0),
+            max = cms.untracked.double(200.0),
+            nbins = cms.untracked.int32(50),
+            name = cms.untracked.string("bHadron pT"),
+            description = cms.untracked.string("pT [GeV/c]"),
+            plotquantity = cms.untracked.string("pt")
+        )
+    )
 )
 
 
