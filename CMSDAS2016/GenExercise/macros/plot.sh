@@ -19,7 +19,7 @@ MECompare(\"$hist1\",\"$hist2\",\"plotGenJets\");
 MECompare(\"$hist1\",\"$hist2\",\"plotLeptonPlusJet\");
 MECompare(\"$hist1\",\"$hist2\",\"plotChargedTracks\"); 
 .q" >> root.sh
-root.exe -b < root.sh
+root -b -l < root.sh
 
 gs -dBATCH -dNOPAUSE -q -sDEVICE=pdfwrite -sOutputFile=comparisons.PS *.ps
 rm *.ps
