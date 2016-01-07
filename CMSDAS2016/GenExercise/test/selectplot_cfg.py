@@ -34,14 +34,6 @@ for l in options.inputFiles:
       product="prunedGenParticles"
       break
 
-
-process.printGenParticle = cms.EDAnalyzer("ParticleListDrawer",
-     src = cms.InputTag("genParticles"),
-     maxEventsToPrint = cms.untracked.int32(1)
-)
-
-
-
 process.genParticlesClone = cms.EDFilter("CandViewShallowCloneProducer",
     src = cms.InputTag(product),
     cut = cms.string("status=2 & ((abs(pdgId)>500 & abs(pdgId)<600) || (abs(pdgId)>5000 & abs(pdgId)<6000) ) ")
