@@ -21,9 +21,9 @@ MECompare(\"$hist1\",\"$hist2\",\"plotChargedTracks\");
 .q" >> root.sh
 root.exe -b < root.sh
 
-#psmerge -ocomparisons.PS *.ps
-#rm *.ps
-#rename .PS .ps comparisons.PS
+gs -dBATCH -dNOPAUSE -q -sDEVICE=pdfwrite -sOutputFile=comparisons.PS *.ps
+rm *.ps
+rename .PS .ps comparisons.PS
 
 date
 #---------------------------------------------------------------------------------
